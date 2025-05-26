@@ -25,8 +25,21 @@
 package com.raylib.raymob;  // Don't change the package name (see gradle.properties)
 
 import android.app.NativeActivity;
+import android.os.Build;
+import android.support.annotation.RequiresApi;
+import android.util.Log;
 import android.view.KeyEvent;
+
+
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.NotificationChannel;
+import android.content.Context;
+
 import android.os.Bundle;
+import android.content.res.AssetManager;
+
+
 
 public class NativeLoader extends NativeActivity {
 
@@ -34,14 +47,57 @@ public class NativeLoader extends NativeActivity {
     public SoftKeyboard softKeyboard;
     public boolean initCallback = false;
 
+    public static NativeActivity instance;
     // Loading method of your native application
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        instance = this;
+        Log.i("RAYMOB", "onCreate fired — NativeLoader instance set.");
+        listAssets();
         displayManager = new DisplayManager(this);
         softKeyboard = new SoftKeyboard(this);
         System.loadLibrary("raymob");   // Load your game library (don't change raymob, see gradle.properties)
     }
+
+
+
+
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    public static void showTestNotification() {
+        Log.e("RAYMOB", "showTestNotification fired");
+
+        if (instance == null) {
+            Log.e("RAYMOB", "instance is null!");
+            return;
+        } else {
+            Log.e("RAYMOB", "instance is not null!");
+        }
+        Context ctx = instance;
+        NotificationManager manager = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
+
+        String channelId = "raymob_channel";
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(channelId, "RaymobChannel", NotificationManager.IMPORTANCE_DEFAULT);
+            manager.createNotificationChannel(channel);
+        }
+
+        Notification.Builder builder = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                ? new Notification.Builder(ctx, channelId)
+                : new Notification.Builder(ctx);
+
+        builder.setContentTitle("Raymob Alert")
+                .setContentText("JNI works. Your notification is alive.")
+                .setSmallIcon(android.R.drawable.ic_dialog_info)
+                .setAutoCancel(true);
+
+        manager.notify(42, builder.build());
+    }
+
+
+
+
 
     // Handling loss and regain of application focus
     @Override
@@ -95,5 +151,18 @@ public class NativeLoader extends NativeActivity {
     private native void onAppResume();
     private native void onAppPause();
     private native void onAppStop();
+
+    public void listAssets() {
+        AssetManager assetManager = getAssets();
+        try {
+            String[] files = assetManager.list(""); // "" means root of assets
+            for (String file : files) {
+                Log.d("AssetList", "Found in assets: " + file);
+            }
+        } catch (Exception e) {
+            Log.e("AssetList", "Error listing assets", e);
+        }
+    }
+
 
 }

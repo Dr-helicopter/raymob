@@ -125,7 +125,11 @@ android {
         updateFile("src/main/cpp/deps/raymob/soft_keyboard.c", project.properties['app.application_id'].replace(".", "/"), "com/raylib/raymob")
 
     }
-
+    sourceSets {
+        main {
+            assets.srcDirs = ['src/main/assets']
+        }
+    }
     buildTypes {
         debug {
             debuggable true
@@ -156,6 +160,7 @@ android {
         buildConfig true
         viewBinding true
     }
+    ndkVersion '29.0.13113456 rc1'
 }
 
 /*
